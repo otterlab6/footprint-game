@@ -32,6 +32,7 @@ The database only allows reading scores and calling `submit_score()`, which vali
 - Pokémon names (EN/KO/JA, #1–#898) are bundled in `js/pokemon-data.js` instead of calling PokeAPI; the next round is preloaded.
 - The answer always has a visible footprint, and decoys never share the answer's footprint shape (the original could produce unwinnable rounds — ~24% of species have blank footprints).
 - No duplicate Pokémon in a round; ranked mode and online leaderboard added.
+- Music: "Lake" plays on the title / game-over screens; during a game it switches to "The Gatekeepers" (the Sentry Duty theme from Explorers of Sky), which loops seamlessly from its loop point via Web Audio (`<audio loop>` fallback).
 
 ## Structure
 
@@ -41,7 +42,7 @@ js/game.js            game logic + rendering (1920×1080 logical canvas, scaled 
 js/leaderboard.js     tiny Supabase REST client
 js/config.js          Supabase URL + publishable key
 js/pokemon-data.js    names (EN/KO/JA) + footprint shape groups
-assets/               images, sounds, fonts from the original repo + Galmuri font
+assets/               images, sounds, fonts from the original repo + Galmuri font + Gatekeepers.mp3 (in-game music)
 supabase/schema.sql   leaderboard schema
 ```
 

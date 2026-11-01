@@ -308,9 +308,6 @@
   };
   for (const [key, src] of Object.entries(UI_IMAGES)) loadImage(src).then((img) => { ui[key] = img; }, () => {});
 
-  const music = new Audio('assets/sounds/Music.mp3');
-  music.loop = true;
-  music.volume = 0.3;
   const sfx = {
     hover: new Audio('assets/sounds/5.wav'),
     correct: new Audio('assets/sounds/7.wav'),
@@ -326,16 +323,14 @@
       if (p) p.catch(() => {});
     } catch (e) { /* ignore */ }
   }
-  function startMusic() {
-    if (!soundOn || !music.paused) return;
-    const p = music.play();
-    if (p) p.catch(() => {});
-  }
   let audioUnlocked = false;
   function unlockAudio() {
+    resumeAudio();
     // iOS only allows audio elements that were first played inside a user gesture.
     if (audioUnlocked) return;
     audioUnlocked = true;
+    // Let music/SFX play like media (as <audio> did) rather than being silenced by the iOS mute switch.
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* ignore */ }
     for (const a of Object.values(sfx)) {
       a.muted = true;
       const done = () => { a.pause(); a.currentTime = 0; a.muted = false; };
@@ -343,6 +338,129 @@
       if (p) p.then(done, done); else done();
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Background music — "Lake" on the title / game-over screens, "The Gatekeepers" (the Sentry Duty
+  // theme) while a game is in progress. Tracks are decoded into Web Audio buffers so the game track
+  // loops seamlessly from its loop point (it has a short intro that only plays once); a plain
+  // <audio loop> element is the fallback (e.g. no Web Audio, or fetch() blocked when opened from file://).
+  // ---------------------------------------------------------------------------
+  const BGM = {
+    menu: { src: 'assets/sounds/Music.mp3', volume: 0.3, fadeIn: 1 },
+    // Loop points in seconds. The file runs ~0.6 s past loopEnd (continuing from loopStart), so the
+    // jump stays seamless even if a browser's MP3 decoder shifts the audio by a few milliseconds.
+    // Volume is higher because this track is mastered ~7 dB quieter than "Lake".
+    game: { src: 'assets/sounds/Gatekeepers.mp3', volume: 0.65, fadeIn: 0, loopStart: 2.725, loopEnd: 45.07390625 },
+  };
+  const BGM_FADE_OUT = 0.5;
+  let actx = null;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) actx = new AC();
+  } catch (e) { actx = null; }
+
+  function resumeAudio() {
+    if (!actx || actx.state === 'running') return;
+    try { const p = actx.resume(); if (p) p.catch(() => {}); } catch (e) { /* ignore */ }
+  }
+  function decodeAudio(data) {
+    // Older Safari only supports the callback form of decodeAudioData.
+    return new Promise((resolve, reject) => {
+      const p = actx.decodeAudioData(data, resolve, reject);
+      if (p && p.then) p.then(resolve, reject);
+    });
+  }
+  function mediaFallback(t) {
+    const a = new Audio(t.src);
+    a.loop = true;
+    a.volume = t.volume;
+    if (t.loopEnd) {
+      a.addEventListener('timeupdate', () => {
+        if (a.currentTime >= t.loopEnd) a.currentTime -= t.loopEnd - t.loopStart;
+      });
+    }
+    return a;
+  }
+  for (const t of Object.values(BGM)) {
+    t.buffer = null; t.el = null; t.node = null; t.gain = null;
+    t.ready = (actx
+      ? fetch(t.src)
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+        .then(decodeAudio)
+        .then((b) => { t.buffer = b; })
+      : Promise.reject(new Error('no Web Audio'))
+    ).catch(() => { t.el = mediaFallback(t); });
+  }
+
+  function startTrack(t) {
+    if (t.buffer) {
+      const node = actx.createBufferSource();
+      node.buffer = t.buffer;
+      node.loop = true;
+      if (t.loopEnd) { node.loopStart = t.loopStart; node.loopEnd = t.loopEnd; }
+      const gain = actx.createGain();
+      const now = actx.currentTime;
+      if (t.fadeIn > 0) {
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(t.volume, now + t.fadeIn);
+      } else {
+        gain.gain.setValueAtTime(t.volume, now);
+      }
+      node.connect(gain);
+      gain.connect(actx.destination);
+      node.start();
+      t.node = node; t.gain = gain;
+    } else if (t.el) {
+      try { t.el.currentTime = 0; } catch (e) { /* ignore */ }
+      const p = t.el.play();
+      if (p) p.catch(() => {});
+    }
+  }
+  function stopTrack(t) {
+    if (t.node) {
+      const { node, gain } = t;
+      t.node = null; t.gain = null;
+      const now = actx.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0, now + BGM_FADE_OUT);
+      node.onended = () => gain.disconnect();
+      try { node.stop(now + BGM_FADE_OUT + 0.05); } catch (e) { gain.disconnect(); }
+    }
+    if (t.el && !t.el.paused) t.el.pause();
+  }
+
+  let bgmWant = 'menu';   // track that belongs to the current screen
+  let bgmOn = null;       // track that is actually playing
+  function syncBgm() {
+    const want = soundOn && audioUnlocked ? bgmWant : null;
+    if (want === bgmOn) return;
+    if (bgmOn) stopTrack(BGM[bgmOn]);
+    bgmOn = null;
+    if (!want) return;
+    const t = BGM[want];
+    if (t.buffer || t.el) {
+      startTrack(t);
+      bgmOn = want;
+    } else {
+      t.ready.then(syncBgm);   // still downloading: start as soon as it's ready (if still wanted)
+    }
+  }
+  function setBgm(key) {
+    bgmWant = key;
+    syncBgm();
+  }
+
+  // Browsers only allow audio after a user gesture: unlock on the first one so the menu music can
+  // start on the title screen. The short delay lets a click that starts a game switch straight to
+  // the game track instead of briefly starting "Lake" first.
+  function onGesture() {
+    resumeAudio();
+    if (audioUnlocked) return;
+    unlockAudio();
+    setTimeout(syncBgm, 150);
+  }
+  for (const type of ['click', 'keydown', 'touchend']) window.addEventListener(type, onGesture, true);
 
   if (document.fonts && document.fonts.load) {
     for (const f of ['50px "PMD"', '34px "PokemonSolid"', '44px "Galmuri11"', '32px "Galmuri11 Bold"']) {
@@ -441,7 +559,7 @@
     round = null;
     hideOverlay();
     unlockAudio();
-    startMusic();
+    setBgm('game');
     if (!nextRound || nextRoundFailed) prefetch();
     advance();
   }
@@ -550,6 +668,7 @@
     token++;
     clearPending();
     phase = 'title';
+    setBgm('menu');
     run = null;
     round = null;
     msg = null;
@@ -562,6 +681,7 @@
     token++;
     clearPending();
     phase = 'gameover';
+    setBgm('menu');
     showPanel('over');
     el.overBoard.innerHTML = '';
     if (run.score > 0) {
@@ -722,7 +842,7 @@
   el.sound.addEventListener('click', () => {
     soundOn = !soundOn;
     savePrefs();
-    if (soundOn) { if (phase !== 'title' || audioUnlocked) startMusic(); } else { music.pause(); }
+    syncBgm();
     refreshTexts();
   });
 
@@ -976,5 +1096,6 @@
   // Small debug hook (handy in the console and for automated tests).
   window.__footprint = {
     get state() { return { phase, mode, run, round, stats, lang }; },
+    get bgm() { return { want: bgmWant, on: bgmOn, ctx: actx && actx.state, time: actx && actx.currentTime }; },
   };
 })();
