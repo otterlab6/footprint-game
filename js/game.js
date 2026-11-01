@@ -12,7 +12,7 @@
   // Config
   // ---------------------------------------------------------------------------
   const W = 1920, H = 1080;
-  const NUM_SPECIES = 898;              // footprint sprites exist for #1–#898 (Gen I–VIII)
+  const NUM_SPECIES = 493;              // Gen I–IV only (#1 Bulbasaur – #493 Arceus), the Explorers-era roster
   const SEGMENTS = 10;                  // timer bars
   const SEGMENT_MS = 3000;              // one bar turns red every 3 s → 30 s per round
   const ROUND_MS = SEGMENTS * SEGMENT_MS;

@@ -31,6 +31,7 @@ The database only allows reading scores and calling `submit_score()`, which vali
 
 - Pokémon names (EN/KO/JA, #1–#898) are bundled in `js/pokemon-data.js` instead of calling PokeAPI; the next round is preloaded.
 - The answer always has a visible footprint, and decoys never share the answer's footprint shape (the original could produce unwinnable rounds — ~24% of species have blank footprints).
+- Only Gen I–IV Pokémon (#1–#493) appear, matching the Sentry Duty roster in Explorers of Sky.
 - No duplicate Pokémon in a round; ranked mode and online leaderboard added.
 - Music: "Lake" plays on the title / game-over screens; during a game it switches to "The Gatekeepers" (the Sentry Duty theme from Explorers of Sky), which loops seamlessly from its loop point via Web Audio (`<audio loop>` fallback).
 
