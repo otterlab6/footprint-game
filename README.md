@@ -9,7 +9,7 @@ A web port (HTML5 Canvas + vanilla JS) of [KierranFalloon/FootprintGame](https:/
 - **Ranked** — 3 lives. A wrong pick or running out of time (30 s) costs a life and reveals the answer. Score = footprints identified; ties go to the faster total time. Submit a nickname to the online leaderboard at the end.
 - **Practice** — endless, like the original: wrong picks let you try again until the timer runs out. Lifetime accuracy is kept in the browser.
 
-Controls: mouse / touch, keys `1`–`4` (top-left → top-right → bottom-left → bottom-right), `Esc` for the menu. English by default; Korean (official Korean Pokémon names) for Korean-language browsers or via the language button.
+Controls: mouse / touch, keys `1`–`4` (top-left → top-right → bottom-left → bottom-right), `Esc` for the menu. English by default; Korean and Japanese (official Pokémon names in each language) follow the browser language or the language picker. The language is locked while a game is in progress.
 
 ## Run / deploy
 
@@ -29,7 +29,7 @@ The database only allows reading scores and calling `submit_score()`, which vali
 
 ## Changes from the original
 
-- Pokémon names (EN/KO, #1–#898) are bundled in `js/pokemon-data.js` instead of calling PokeAPI; the next round is preloaded.
+- Pokémon names (EN/KO/JA, #1–#898) are bundled in `js/pokemon-data.js` instead of calling PokeAPI; the next round is preloaded.
 - The answer always has a visible footprint, and decoys never share the answer's footprint shape (the original could produce unwinnable rounds — ~24% of species have blank footprints).
 - No duplicate Pokémon in a round; ranked mode and online leaderboard added.
 
@@ -40,7 +40,7 @@ index.html            layout, menus, game-over / leaderboard panels
 js/game.js            game logic + rendering (1920×1080 logical canvas, scaled to fit)
 js/leaderboard.js     tiny Supabase REST client
 js/config.js          Supabase URL + publishable key
-js/pokemon-data.js    names (EN/KO) + footprint shape groups
+js/pokemon-data.js    names (EN/KO/JA) + footprint shape groups
 assets/               images, sounds, fonts from the original repo + Galmuri font
 supabase/schema.sql   leaderboard schema
 ```
@@ -50,6 +50,6 @@ supabase/schema.sql   leaderboard schema
 - Original game code & assets: [KierranFalloon/FootprintGame](https://github.com/KierranFalloon/FootprintGame) — MIT, © 2023 Kierran Falloon (`LICENSE.md`)
 - Footprint sprites: [KierranFalloon/FootprintAPI](https://github.com/KierranFalloon/FootprintAPI) (Gen I–V: Veekun, Gen VI–VIII: Wolf @ PokeCommunity)
 - Pokémon sprites & name data: [PokeAPI](https://pokeapi.co/)
-- Korean pixel font: [Galmuri](https://github.com/quiple/galmuri) — SIL Open Font License 1.1 (`assets/fonts/Galmuri-OFL.md`)
+- Korean/Japanese pixel font: [Galmuri](https://github.com/quiple/galmuri) — SIL Open Font License 1.1 (`assets/fonts/Galmuri-OFL.md`)
 
 This project is not affiliated with Nintendo or The Pokémon Company. Pokémon and Pokémon character names are trademarks of Nintendo; Pokémon sprites are © The Pokémon Company.

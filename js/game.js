@@ -103,7 +103,8 @@
       boardEmpty: 'No scores yet — be the first!',
       boardFail: "Couldn't load the leaderboard.",
       back: 'Back',
-      langBtn: '한국어',
+      langLocked: "The language can't be changed during a game",
+      rotate: 'Rotate for a bigger view',
       soundOn: '♪ ON',
       soundOff: '♪ OFF',
       menu: 'Menu',
@@ -116,7 +117,7 @@
     },
     ko: {
       htmlLang: 'ko',
-      title: '<span class="ko">발자국 게임</span>',
+      title: '<span class="cjk">발자국 게임</span>',
       subtitle: '포켓몬 불가사의 던전의 「망보기」처럼<br>발자국을 보고 어떤 포켓몬인지 맞혀 보세요!',
       ranked: '랭킹 도전',
       rankedNote: '목숨 3개 · 온라인 랭킹',
@@ -156,7 +157,8 @@
       boardEmpty: '아직 기록이 없어요. 첫 번째가 되어 보세요!',
       boardFail: '랭킹을 불러오지 못했어요.',
       back: '돌아가기',
-      langBtn: 'EN',
+      langLocked: '게임 중에는 언어를 바꿀 수 없어요',
+      rotate: '가로로 돌리면 더 크게 보여요',
       soundOn: '♪ 켜짐',
       soundOff: '♪ 꺼짐',
       menu: '메뉴',
@@ -167,7 +169,63 @@
       hudFont: '28px "Galmuri11 Bold", "Galmuri11", sans-serif',
       nameBase: 32,
     },
+    ja: {
+      htmlLang: 'ja',
+      title: '<span class="cjk">あしがたゲーム</span>',
+      subtitle: 'ポケモン不思議のダンジョンの「見張り番」みたいに<br>あしがたを見て どのポケモンか 当ててみよう！',
+      ranked: 'ランキング挑戦',
+      rankedNote: 'ライフ3つ · オンラインランキング',
+      practice: '練習モード',
+      practiceNote: 'エンドレス · ライフなし',
+      board: 'ランキングを見る',
+      hint: 'マウス · タッチ · キー1–4で選択 · 1問30秒 · Escでメニュー',
+      loading: 'ポケモンを読み込み中…',
+      loadFail: '画像を読み込めませんでした。インターネット接続を確認してください。',
+      idle: () => ['KF: ポケモンが 来たぞ！', 'あしがたを よく見て', 'どのポケモンか 教えてくれ！'],
+      hover: (n) => [`KF: このポケモンは ${n}か？`],
+      waiting: () => ['KF: 次のポケモンを 待ってるぞ…'],
+      judge: (n) => [`あしがたは ${n}！`, `あしがたは ${n}！`],
+      correct: [() => ['KF: ……うん！ 正解だと思うぞ！'], () => ['KF: よし 聞こえたぞ！ 入っていいぞ！']],
+      wrong: [() => ['KF: ……えっ？！ ちがうと思うぞ！'], () => ['KF: ん？ ちがうだろ？ もう一度！']],
+      wrongReveal: (n) => ['KF: ……えっ？！ ちがうと思うぞ！', `正解は ${n}だった！`],
+      timeout: [
+        (n) => ['KF: 時間切れだ！ もっと急げ！', `正解は ${n}だった！`],
+        (n) => [`正解は ${n}だ！`, 'しっかりしろー！'],
+      ],
+      stats: (w, t) => `正解 ${w} · 挑戦 ${t}` + (t ? ` · ${((w / t) * 100).toFixed(1)}%` : ''),
+      hudScore: (n) => `スコア ${n}`,
+      time: (ms) => `${(ms / 1000).toFixed(1)}秒`,
+      gameOver: 'ゲームオーバー',
+      overScore: (n, ms) => `<b>${n}</b>問正解 · ${(ms / 1000).toFixed(1)}秒`,
+      namePlaceholder: 'ニックネーム（16文字まで）',
+      submit: '登録',
+      submitting: '登録中…',
+      submitted: (rank) => `${rank}位にランクイン！`,
+      submitFail: '登録できませんでした。しばらくしてから もう一度お試しください。',
+      nameRequired: 'ニックネームを入力してください。',
+      noScore: '正解がなかったので、今回は登録できる記録がありません。',
+      again: 'もう一度挑戦',
+      home: 'メニュー',
+      boardTitle: 'オンラインランキング · ライフ3つ',
+      boardLoading: '読み込み中…',
+      boardEmpty: 'まだ記録がありません。一番乗りを目指そう！',
+      boardFail: 'ランキングを読み込めませんでした。',
+      back: 'もどる',
+      langLocked: 'ゲーム中は言語を変更できません',
+      rotate: '横向きにすると大きく表示されます',
+      soundOn: '♪ オン',
+      soundOff: '♪ オフ',
+      menu: 'メニュー',
+      reset: '記録リセット',
+      resetConfirm: 'もう一度押すとリセット',
+      // Galmuri11 Bold has no kana, so Japanese uses the regular weight everywhere.
+      nameFont: (px) => `${px}px "Galmuri11", sans-serif`,
+      textFont: '44px "Galmuri11", sans-serif',
+      hudFont: '28px "Galmuri11", sans-serif',
+      nameBase: 32,
+    },
   };
+  const LANGS = Object.keys(STR); // en | ko | ja
 
   // ---------------------------------------------------------------------------
   // Persistence (best effort)
@@ -179,7 +237,9 @@
   const prefs = loadPrefs();
   const stats = { w: prefs.w | 0, t: prefs.t | 0 };
   const browserLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
-  let lang = prefs.lang === 'en' || prefs.lang === 'ko' ? prefs.lang : (/^ko\b/i.test(browserLang) ? 'ko' : 'en');
+  const langMatch = /^(ko|ja)\b/i.exec(browserLang);
+  const detected = langMatch ? langMatch[1].toLowerCase() : 'en';
+  let lang = LANGS.includes(prefs.lang) ? prefs.lang : detected;
   let soundOn = prefs.soundOn !== false;
   let lastName = typeof prefs.name === 'string' ? prefs.name : '';
   function savePrefs() {
@@ -203,7 +263,8 @@
     submit: $('btn-submit'), submitStatus: $('submit-status'), overBoard: $('over-board'),
     again: $('btn-again'), home: $('btn-home'),
     boardTitle: $('board-title'), boardList: $('board-list'), boardStatus: $('board-status'), back: $('btn-back'),
-    lang: $('btn-lang'), sound: $('btn-sound'), menu: $('btn-menu'), reset: $('btn-reset'),
+    lang: $('sel-lang'), sound: $('btn-sound'), menu: $('btn-menu'), reset: $('btn-reset'),
+    rotate: $('rotate'),
   };
 
   // Status lines are stored as keys so they re-render when the language changes.
@@ -285,7 +346,7 @@
 
   if (document.fonts && document.fonts.load) {
     for (const f of ['50px "PMD"', '34px "PokemonSolid"', '44px "Galmuri11"', '32px "Galmuri11 Bold"']) {
-      document.fonts.load(f, 'Aa가').catch(() => {});
+      document.fonts.load(f, 'Aa가あ').catch(() => {});
     }
   }
 
@@ -376,7 +437,7 @@
     token++;
     clearPending();
     mode = newMode;
-    run = mode === 'ranked' ? { lives: RANKED_LIVES, score: 0, timeMs: 0, submitted: false } : null;
+    run = mode === 'ranked' ? { lives: RANKED_LIVES, score: 0, timeMs: 0, submitted: false, lang } : null;
     round = null;
     hideOverlay();
     unlockAudio();
@@ -590,7 +651,7 @@
     el.submit.disabled = true;
     setStatus(el.submitStatus, 'submitting');
     try {
-      const res = await window.Leaderboard.submit(name, run.score, run.timeMs, lang);
+      const res = await window.Leaderboard.submit(name, run.score, run.timeMs, run.lang);
       if (t !== token) return;
       run.submitted = true;
       lastName = name;
@@ -628,7 +689,11 @@
     el.home.textContent = s.home;
     el.boardTitle.textContent = s.boardTitle;
     el.back.textContent = s.back;
-    el.lang.textContent = s.langBtn;
+    // The language is locked while a round is on screen (ranked or practice).
+    el.lang.value = lang;
+    el.lang.disabled = inGame();
+    el.lang.title = inGame() ? s.langLocked : '';
+    el.rotate.textContent = s.rotate;
     el.sound.textContent = soundOn ? s.soundOn : s.soundOff;
     el.sound.setAttribute('aria-pressed', String(soundOn));
     el.menu.textContent = s.menu;
@@ -645,10 +710,13 @@
     }
   }
 
-  el.lang.addEventListener('click', () => {
-    lang = lang === 'ko' ? 'en' : 'ko';
+  el.lang.addEventListener('change', () => {
+    const next = el.lang.value;
+    if (inGame() || !LANGS.includes(next)) { el.lang.value = lang; return; }
+    lang = next;
     savePrefs();
     refreshTexts();
+    el.lang.blur();
   });
 
   el.sound.addEventListener('click', () => {
@@ -705,7 +773,7 @@
   });
   window.addEventListener('keydown', (e) => {
     const tag = e.target && e.target.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.repeat || e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.key >= '1' && e.key <= '4' && inGame()) {
       const slot = Number(e.key) - 1;
@@ -768,17 +836,23 @@
     ctx.fillText(text, x, y);
   }
 
+  // Breaks at spaces, and between any two kana/kanji (Japanese has no spaces). Latin and Hangul
+  // words stay whole. Closing punctuation and small kana never start a line.
+  const WRAP_TOKENS = /\s+|[\u3000-\u30ff\u3400-\u9fff\uff00-\uffef]|[^\s\u3000-\u30ff\u3400-\u9fff\uff00-\uffef]+/g;
+  const NO_LINE_START = /^[、。，．,.!?！？…‥ー・：」』）)ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ]/;
   function wrapLines(lines, maxW, maxLines) {
     const out = [];
     for (const line of lines) {
       if (ctx.measureText(line).width <= maxW) { out.push(line); continue; }
       let cur = '';
-      for (const word of line.split(' ')) {
-        const test = cur ? cur + ' ' + word : word;
-        if (ctx.measureText(test).width <= maxW || !cur) cur = test;
-        else { out.push(cur); cur = word; }
+      for (const tk of line.match(WRAP_TOKENS) || []) {
+        const space = /^\s/.test(tk);
+        if (!cur) { if (!space) cur = tk; continue; }
+        if (ctx.measureText(cur + tk).width <= maxW || NO_LINE_START.test(tk)) { cur += tk; continue; }
+        out.push(cur.trimEnd());
+        cur = space ? '' : tk;
       }
-      if (cur) out.push(cur);
+      if (cur) out.push(cur.trimEnd());
     }
     return out.slice(0, maxLines);
   }

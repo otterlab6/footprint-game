@@ -15,7 +15,7 @@ create table public.scores (
   constraint scores_time_range     check (time_ms between 0 and 86400000),
   constraint scores_time_plausible check (time_ms >= score * 200),
   constraint scores_mode           check (mode in ('lives3')),
-  constraint scores_lang           check (lang in ('en', 'ko'))
+  constraint scores_lang           check (lang in ('en', 'ko', 'ja'))
 );
 
 comment on table public.scores is 'Footprint Game leaderboard. Public read; writes only through submit_score().';
@@ -67,7 +67,7 @@ begin
   end if;
 
   insert into public.scores (name, score, time_ms, mode, lang)
-  values (v_name, p_score, p_time_ms, 'lives3', case when p_lang = 'ko' then 'ko' else 'en' end)
+  values (v_name, p_score, p_time_ms, 'lives3', case when p_lang in ('ko', 'ja') then p_lang else 'en' end)
   returning public.scores.id into v_id;
 
   select count(*) + 1 into v_rank

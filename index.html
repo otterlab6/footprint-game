@@ -45,13 +45,24 @@
     button:hover { background: #333; }
     button:active { transform: translateY(0.15cqw); box-shadow: inset 0 0 0 0.15cqw var(--panel); }
     button:disabled { opacity: 0.5; cursor: default; transform: none; }
-    button:focus-visible, input:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
     button.primary { border-color: var(--yellow); box-shadow: inset 0 0 0 0.15cqw var(--panel), 0 0.25cqw 0 #8a6d00; color: var(--yellow); }
 
     /* toolbar sits on the stone-wall panel (bottom-left) */
     #toolbar { position: absolute; left: 1.2cqw; bottom: 1.6cqw; display: flex; gap: 0.6cqw; z-index: 2; }
     #toolbar button { font-size: max(11px, 1.15cqw); padding: 0.55cqw 0.9cqw; min-height: 28px; }
     #toolbar button[hidden] { display: none; }
+    #toolbar select {
+      font: inherit; font-size: max(11px, 1.15cqw); line-height: 1.1; color: #fff; cursor: pointer;
+      -webkit-appearance: none; appearance: none; min-height: 28px;
+      padding: 0.55cqw max(20px, 2cqw) 0.55cqw 0.9cqw;
+      border: max(2px, 0.25cqw) solid var(--pink); border-radius: 0.6cqw;
+      box-shadow: inset 0 0 0 0.15cqw var(--panel), 0 0.25cqw 0 var(--pink-dark);
+      background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23ff6fc8'/%3E%3C/svg%3E") no-repeat right max(7px, 0.7cqw) center / max(8px, 0.75cqw) auto;
+    }
+    #toolbar select:hover { background-color: #333; }
+    #toolbar select:disabled { opacity: 0.5; cursor: not-allowed; }
+    #toolbar option { color: #fff; background: #222; }
 
     #overlay {
       position: absolute; inset: 0; z-index: 1;
@@ -68,8 +79,10 @@
       margin: 0; font-family: "PokemonSolid", "Galmuri11 Bold", sans-serif; font-weight: normal;
       font-size: 6cqw; letter-spacing: 0.1cqw; color: var(--gold); text-shadow: 0.35cqw 0.35cqw 0 #3466af;
     }
-    .panel h1 .ko { font-family: "Galmuri11 Bold", sans-serif; }
-    .panel h2 { margin: 0; font-family: "Galmuri11 Bold", sans-serif; font-size: max(18px, 3cqw); color: var(--gold); }
+    .panel h1 .cjk { font-family: "Galmuri11 Bold", "Galmuri11", sans-serif; }
+    .panel h2 { margin: 0; font-family: "Galmuri11 Bold", "Galmuri11", sans-serif; font-size: max(18px, 3cqw); color: var(--gold); }
+    /* Galmuri11 Bold has no kana: Japanese headings use the regular weight. */
+    :lang(ja) .panel h1 .cjk, :lang(ja) .panel h2 { font-family: "Galmuri11", sans-serif; }
     .panel p { margin: 0; font-size: max(13px, 1.6cqw); line-height: 1.5; }
     .panel .hint { font-size: max(11px, 1.15cqw); color: var(--muted); }
     .panel .status { font-size: max(12px, 1.3cqw); color: #ff9db8; min-height: 1.5em; }
@@ -151,13 +164,17 @@
     </div>
 
     <div id="toolbar">
-      <button id="btn-lang" type="button" aria-label="Language / 언어"></button>
+      <select id="sel-lang" aria-label="Language / 언어 / 言語">
+        <option value="en" lang="en">English</option>
+        <option value="ko" lang="ko">한국어</option>
+        <option value="ja" lang="ja">日本語</option>
+      </select>
       <button id="btn-sound" type="button" aria-label="Sound on/off"></button>
       <button id="btn-menu" type="button" hidden></button>
       <button id="btn-reset" type="button" hidden></button>
     </div>
   </div>
-  <div id="rotate">Rotate for a bigger view · 가로로 돌리면 더 크게 보여요</div>
+  <div id="rotate">Rotate for a bigger view</div>
 
   <script src="js/config.js"></script>
   <script src="js/leaderboard.js"></script>
